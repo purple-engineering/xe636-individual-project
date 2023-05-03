@@ -1,44 +1,51 @@
-# ===== Library imports ====================
+# Description: A program that acquires and stores the acceleration data onboard the Microbit.
+# Author: Sonny Rickwood
+# Version: 20230428-1325
+
+
+# ========== Library Imports
 from microbit import *
 import radio, log, speech
 
-# ===== Microbit Configuration ====================
+# ========== Microbit Configuration
 accelerometer.set_range(8) # Range: 0-8, Default: 8
 global_radio_group = 255 # Range: 0-255, Default: 255
 radio.config(group=global_radio_group, power=7)
 radio.on()
 
-# ===== Start Procedure ====================
+# ========== Start/Safety Procedure
 message = radio.receive()
 
 while message != "Confirm Launch":
-    # Loop to check if the radio received the message "Confirm Launch"
-    # Alternatively, if button A is pressed, the radio will send "Confirm Launch" and break the loop
+    # Loop to check if a message has been received from the other Microbit
+    # If the message does not match "Confirm Launch", code will keep looping
+    # Or until Button A is pressed on the Microbit
+    # This will result in the Microbit sending out Launch Confirmation message
     message = radio.receive()
     if button_a.was_pressed():
         radio.send("Confirm Launch")
         break
     display.show(Image.NO)
 
-# ===== Start Confirmation ====================
-display.show(Image.NO.invert()) # Inverts the image on the display to show the button or radio signal has been acknowledged
-radio.off() # Turns radio off to save power
-log.delete(True) # Remove all contents within the Microbits memory
+# ========== Start Confirmation
+# Code to confirm to the user that the accelerometer calibration procedure is about to start
+display.show(Image.NO.invert()) # Inverts the "No" image previously shown
+radio.off() # Radio turned off to save power
+log.delete(True) # Clears Microbit memory ready for data acquisition
 set_volume(255)
 
-# ===== Accelerometer Calibration ====================
-# Set up calibration dictionary and loop variables
-cali_dict = {'x':0, 'y':0, 'z':0, 'len':0}
+# ========== Accelerometer Calibration
+cali_dict = {'x':0, 'y':0, 'z':0, 'len':0} # Creates a dictionary to store the biasing values and length of biasing data
 wait_len, slp_len, last_time = 10000, 100, 0
 # wait_len: Duration of the loop (ms)
 # slp_len: Pauses between each iteration (ms)
-# last_time: Used to ensure the correct number is displayed on the Microbit display
+# last_time: Used for displaying the amount of time left before calibration process is complete.
 
 while wait_len > 0:
-    # Creates a loop of duration wait_len/slp_len
-    # In Each iteration, the accelerometer value is added to its respective dictionary entry
-    # The calibration length is also increased by one for each iteration
-    
+    # Loop that keeps iterating until wait_len is less then 0
+    # Loops iteration length is equal to wait_len/slp_Len
+    # Each iteration results in acceleration data being added to their respective dictionary and len increasing by 1
+       
     accel_x, accel_y, accel_z = accelerometer.get_values()
     
     cali_dict['x'] += accel_x
@@ -51,38 +58,42 @@ while wait_len > 0:
     time = wait_len // 1000 # Floor divided the remaining time by 1000 to give the number of whole seconds left in the loop
     
     if last_time != time:
-        # Checks to see if the last recorded time is different from the number of whole seconds left
-        # If it is different, then the last_time is replaced, the time is spoken, and the display is changed
+        # Checks to see if the last number shown/said is different from the current.
+        # If it is different the new number is shown/said
+        # Else it continues
         speech.say(str(time))
         last_time = time
         display.show(Image.ALL_CLOCKS[time])
-    
     sleep(slp_len)
 
-# Dictionary to store the average accelerometer bias
+# Dictionary to contain biasing data 
 avg_dict = {'x':cali_dict['x']/cali_dict['len'], 
             'y':cali_dict['y']/cali_dict['len'], 
             'z':cali_dict['z']/cali_dict['len']}
 
-# ===== Start Logging Confirmation ====================
+# ========== Start Logging Confirmation
+# Code to confirm to user that data logging is about to start
 for x in range(0, 3):
-    # Flashes the display three times to confirm to the user that the calibration process is complete and data logging is commencing
     display.show(Image.SQUARE)
     sleep(100)
     display.show(Image.SQUARE.invert())
     sleep(100)
     speech.say('Go')
 
-# ===== Data logging ====================
+# ========== Data Acquisition & Logging
+# Data is logged to Microbits onboard memory with the current running time
+# Logging can be halted if button B is pressed
+# Confirmation of logging is displayed through Microbit screen
 display.show(Image.HAPPY)
 while not(button_b.was_pressed()):
-    # Continually logs the accelerometer values minus their bias until button B is pressed
-    # A 200ms delay is present between logs to ensure the Microbits memory does not fill up too quickly
+    # Logs biased acceleration data every 200 ms until button B is pressed
+    # Delay is added to prevent memory overflow
     data = {'x': str(accelerometer.get_x() - avg_dict['x']), 
             'y': str(accelerometer.get_y() - avg_dict['y']), 
             'z': str(accelerometer.get_z() - avg_dict['z'])}
     log.add(data)
     sleep(200)
 
-# ===== End Confirmation ====================
+# ========== Finished Confirmation
+# Displays image to confirm logging has been halted
 display.show(Image.YES)

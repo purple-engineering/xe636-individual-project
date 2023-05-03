@@ -1,20 +1,19 @@
-# Title: Remote Control Code
-# Description:
+# Description: A program capable of obtaining gain values, steering and forward/backward requests for the car. The requests will then be radioed to the other Microbit.
 # Author: Sonny Rickwood
 # Version: 20230406-1352
 
-# ========== Library Imports ====================
+# ========== Library Imports
 from microbit import *
 import radio
 
-# ========== Microbit Config ====================
+# ========== Microbit Config
 radio.config(group=25, power=7, length=128, data_rate=radio.RATE_1MBIT)
 
 mapping = lambda value, InitMin, InitMax, NewMin, NewMax : (((NewMax - NewMin)/(InitMax - InitMin)) * (value - InitMax)) + NewMax
 
-# ========== Main Code ====================
+# ========== Main Code
 while True:
-    # ===== Dictionary Declaration ==========
+    # ========== Dictionary Declaration
     controls = {
         'f': 0, 
         'b': 0, 
@@ -24,18 +23,18 @@ while True:
         'Gd': pin2.read_analog()
     }
 
-    # ===== Gain Adjustments ==========
+    # ========== Gain Adjustments
     controls['Gp'] = round(mapping(controls['Gp'], 0, 1023, 1, 10), 2)
     controls['Gi'] = 10 ** (-1 * round(mapping(controls['Gi'], 0, 1023, 6, 0), 2))
     controls['Gd'] = 10 ** (round(mapping(controls['Gd'], 0, 1023, 0, 5), 2))
 
-    # ===== Steering Limits ==========
+    # ========== Steering Limits
     if controls['s'] < -1023:
         controls['s'] = -1023
     elif controls['s'] > 1023:
         controls['s'] = 1023
 
-    # ===== Direction Adjustment ==========
+    # ========== Direction Adjustment
     if button_b.is_pressed():
         controls['f'] = 1
     elif button_a.is_pressed():

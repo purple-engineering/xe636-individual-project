@@ -1,32 +1,31 @@
-# Title: Remote Control Car Code with Simulation
-# Description:
+# Description: Program to run on the Microbit that receives the message sent from the Controller program. The message should be decoded, and the appropriate pins should be activated. Steering requests should be put through a PID algorithm.
 # Author: Sonny Rickwood
 # Version: 20230406-1352
 
-# ========== Library Imports ====================
+# ========== Library Imports
 from microbit import *
 import radio
 
-# ========== Microbit Config ====================
+# ========== Microbit Config
 radio.config(group=25, power=7, length=128, data_rate=radio.RATE_1MBIT)
 display.off()
 
-# ========== Pin Map ====================
+# ========== Pin Map
 steering_pin = pin0 # Potentiometer Smaller = Right, Larger = Left
 forw_p = pin6 # Drive Forward (Yellow)
 back_p = pin9 # Drive Backward (Blue)
 right_p = pin3 # Steer Smaller (Green/Right)
 left_p = pin4 # Steer Larger (White/Left)
 
-# ========== Steering Configuation ====================
+# ========== Steering Configuation
 steering_max = 850
 steering_min = 200
 steering_pos = (steering_max - steering_min)/2 + steering_min
 
-# ========== Lambda Declaration ====================
+# ========== Lambda Declaration
 mapping = lambda value, InitMin, InitMax, NewMin, NewMax : (((NewMax - NewMin)/(InitMax - InitMin)) * (value - InitMax)) + NewMax
 
-# ========== Simulation Code ====================
+# ========== Simulation Code
 similation_status = False
 
 def steering_sim(left, right, lcl_steering_pos):
@@ -56,7 +55,7 @@ def steering_sim(left, right, lcl_steering_pos):
         return lcl_steering_pos
 
 
-# ========== PID Code ====================
+# ========== PID Code
 gbl_eP = 0
 gbl_eI = 0
 gbl_eD = 0
@@ -70,7 +69,7 @@ def PID_algorithm(target, position, integral_error, delta_time, prev_error, Kp, 
     output = (Kp * error) + (Ki * integral_error) + (Kd * derivative_error)
     return output, error, integral_error, derivative_error
 
-# ========== Function Declaration ====================
+# ========== Function Declaration
 def limit_func(target, min, max):
     if target > max:
         return max
@@ -79,9 +78,9 @@ def limit_func(target, min, max):
     else:
         return target
 
-# ========== Main Code ====================
+# ========== Main Code 
 while True:
-    # ===== Variable Reset ==========
+    # ========== Variable Reset
     controls = ""
     requ_steer = 0
     norm_requ_steer = 0
@@ -95,14 +94,14 @@ while True:
     left_value = 0
     right_value = 0
 
-    # ===== Radio Message Detection ==========
+    # ========== Radio Message Detection
     while True:
         controls = radio.receive()
         if controls:
             break
     controls = controls.strip('{').strip('}').split(',')
 
-    # ===== Message Assignment ==========
+    # ========== Message Assignment
     for i, cont in enumerate(controls):
         if 'Gd' in cont:
             temp = cont.split(':')
@@ -130,14 +129,14 @@ while True:
             back_value = int(temp[1])
 
     
-    # ===== PID Config ==========
+    # ========== PID Config
     curr_timestamp = running_time()
     deltaT = curr_timestamp - prev_timestamp
     prev_timestamp = curr_timestamp
 
     adjustment, gbl_eP, gbl_eI, gbl_eD = PID_algorithm(norm_requ_steer, steering_pos, gbl_eI, deltaT, gbl_eP, Gp, Gi, Gd)
 
-    # ===== Steering Adjustments ==========
+    # ========== Steering Adjustments
     if adjustment > 0:
         if steering_pos > steering_max:
             right_value = adjustment
@@ -154,13 +153,13 @@ while True:
     left_value = limit_func(int(abs(left_value)), 0, 1023)
     right_value = limit_func(int(abs(right_value)), 0, 1023)
     
-    # ===== Pin Assignment ==========
+    # ========== Pin Assignment
     forw_p.write_digital(forw_value)
     back_p.write_digital(back_value)
     left_p.write_analog(left_value)
     right_p.write_analog(right_value)
 
-    # ===== Simulation ==========
+    # ========== Simulation
     if button_a.was_pressed():
         similation_status = not(similation_status)
 
@@ -169,5 +168,5 @@ while True:
     else:
         steering_pos = steering_pin.read_analog()
 
-    # ===== Code Testing ==========
+    # ========== Code Testing
     print("Req: {}, Pos: {}, Adj: {}, P: {}, I: {}, D: {}, Left: {}, Right: {}, Forward: {}, Backward: {}".format(norm_requ_steer, steering_pos, adjustment, gbl_eP * Gp, gbl_eI * Gi, gbl_eD * Gd, left_value, right_value, forw_value, back_value))
