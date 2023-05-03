@@ -1,0 +1,11 @@
+Title: Acquisition
+Description: A program that acquires and stores the acceleration data onboard the Microbit.
+Inputs: Acceleration data
+Outputs: A file containing organised acceleration data with time collected
+Additional Components: N/A
+
+Title: Display
+Description: A program that takes the file containing the acceleration data computes the delta time between data collections and converts acceleration to velocity and displacement counterparts. The data should then be plotted on an appropriate graph.
+Inputs: A file containing organised acceleration data with time collected
+Outputs: Formatted graph displaying the acceleration, velocity and displacement values against time.
+Additional Components: N/A

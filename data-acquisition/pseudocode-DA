@@ -1,0 +1,18 @@
+Acquisition:
+REPEAT
+	OUTPUT ‘Start acquisition?’
+UNTIL button pressed
+REPEAT
+	STORE running time
+	STORE acceleration data
+UNTIL button pressed
+OUTPUT CSV acceleration data file
+
+Display:
+INPUT CSV acceleration data file
+REPEAT
+	CALCULATE Δtime from the running time
+	CALCULATE velocity and displacement
+	STORE acceleration, velocity and displacement
+UNTIL contents of the file iterated over
+OUTPUT graph of acceleration, velocity and displacement against time

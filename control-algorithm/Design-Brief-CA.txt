@@ -1,0 +1,11 @@
+Title: Controller
+Description: A program capable of obtaining gain values, steering and forward/backward requests for the car. The requests will then be radioed to the other Microbit.
+Inputs: Acceleration data, button presses, pin voltage
+Outputs: Radio messages containing gain, steering and forward/backward requests
+Additional Components: Potentiometers to change the PID gain values
+
+Title: Car
+Description: Program to run on the Microbit that receives the message sent from the Controller program. The message should be decoded, and the appropriate pins should be activated. Steering requests should be put through a PID algorithm.
+Inputs: Radio message from controller Microbit, steering position
+Outputs: Pin signal to control motors
+Additional Components: Motor controller circuit, potentiometer for steering position, power supply

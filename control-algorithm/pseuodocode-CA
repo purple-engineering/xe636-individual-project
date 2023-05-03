@@ -1,0 +1,17 @@
+Controller:
+REPEAT forever
+	INPUT pin values
+	CALCULATE gains values from pin values
+	INPUT acceleration data
+	INPUT button values
+	OUTPUT formatted controller data
+
+Car:
+REPEAT forever
+	REPEAT
+		DO nothing
+	UNTIL message received
+	INPUT steering position
+	CALCULATE steering error/difference
+	CALCULATE PID algorithm output value
+	OUTPUT pin values according to requested values and PID algorithm
